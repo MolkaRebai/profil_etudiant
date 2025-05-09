@@ -17,8 +17,12 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const questionnaireSchema = z.object({
   mainConcerns: z.string().min(10, { message: "Veuillez décrire vos préoccupations principales (minimum 10 caractères)." }).max(1000),
+  emotionalState: z.string().min(10, { message: "Veuillez décrire votre état émotionnel (minimum 10 caractères)."}).max(1000),
+  symptoms: z.string().max(1000).optional().describe("Symptômes spécifiques rencontrés."),
+  impactOnDailyLife: z.enum(["Pas du tout", "Un peu", "Modérément", "Considérablement", "Sévèrement"], { required_error: "Veuillez sélectionner l'impact sur votre vie quotidienne." }),
   previousTherapy: z.enum(["yes", "no"], { required_error: "Veuillez indiquer si vous avez déjà suivi une thérapie." }),
   therapyGoals: z.string().min(10, { message: "Veuillez décrire vos objectifs thérapeutiques (minimum 10 caractères)." }).max(1000),
+  urgency: z.enum(["Pas urgent", "Bientôt", "Dès que possible"], { required_error: "Veuillez indiquer l'urgence de votre besoin." }),
   therapistPreferences: z.string().max(500).optional(),
 });
 
@@ -33,8 +37,12 @@ export function TherapistFinderForm() {
     resolver: zodResolver(questionnaireSchema),
     defaultValues: {
       mainConcerns: "",
+      emotionalState: "",
+      symptoms: "",
+      impactOnDailyLife: undefined,
       previousTherapy: undefined,
       therapyGoals: "",
+      urgency: undefined,
       therapistPreferences: "",
     },
   });
@@ -46,8 +54,12 @@ export function TherapistFinderForm() {
 
     const questionnaireAnswers = `
       Préoccupations principales: ${values.mainConcerns}
+      État émotionnel général récent: ${values.emotionalState}
+      Symptômes spécifiques (tristesse, angoisse, sommeil, etc.): ${values.symptoms || "Non spécifié"}
+      Impact sur la vie quotidienne (études, social, activités): ${values.impactOnDailyLife}
       Thérapie antérieure: ${values.previousTherapy === "yes" ? "Oui" : "Non"}
       Objectifs thérapeutiques: ${values.therapyGoals}
+      Urgence du besoin de parler: ${values.urgency}
       Préférences pour le thérapeute: ${values.therapistPreferences || "Aucune"}
     `;
 
@@ -127,7 +139,63 @@ export function TherapistFinderForm() {
                 <FormItem>
                   <FormLabel>Quelles sont vos préoccupations principales actuellement ?</FormLabel>
                   <FormControl>
-                    <Textarea placeholder="Ex: anxiété liée aux examens, difficultés relationnelles, stress..." {...field} rows={4} />
+                    <Textarea placeholder="Ex: anxiété liée aux examens, difficultés relationnelles, stress..." {...field} rows={3} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="emotionalState"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Comment décririez-vous votre état émotionnel général récent ?</FormLabel>
+                  <FormControl>
+                    <Textarea placeholder="Ex: plutôt calme, souvent triste, irritable, etc." {...field} rows={3} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="symptoms"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Éprouvez-vous des symptômes spécifiques (optionnel) ?</FormLabel>
+                  <FormControl>
+                    <Textarea placeholder="Ex: tristesse persistante, crises d'angoisse, troubles du sommeil, perte d'intérêt, difficultés de concentration..." {...field} rows={3} />
+                  </FormControl>
+                  <FormDescription>Si oui, lesquels ? Sinon, laissez vide.</FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="impactOnDailyLife"
+              render={({ field }) => (
+                <FormItem className="space-y-3">
+                  <FormLabel>Dans quelle mesure ces préoccupations affectent-elles vos études, votre vie sociale ou vos activités quotidiennes ?</FormLabel>
+                  <FormControl>
+                    <RadioGroup
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                      className="flex flex-col space-y-2"
+                    >
+                      {(["Pas du tout", "Un peu", "Modérément", "Considérablement", "Sévèrement"] as const).map((level) => (
+                        <FormItem key={level} className="flex items-center space-x-3 space-y-0">
+                          <FormControl>
+                            <RadioGroupItem value={level} />
+                          </FormControl>
+                          <FormLabel className="font-normal">{level}</FormLabel>
+                        </FormItem>
+                      ))}
+                    </RadioGroup>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -172,7 +240,34 @@ export function TherapistFinderForm() {
                 <FormItem>
                   <FormLabel>Qu'espérez-vous accomplir avec la thérapie ?</FormLabel>
                   <FormControl>
-                    <Textarea placeholder="Ex: mieux gérer mon stress, améliorer ma confiance en moi, surmonter une période difficile..." {...field} rows={4} />
+                    <Textarea placeholder="Ex: mieux gérer mon stress, améliorer ma confiance en moi, surmonter une période difficile..." {...field} rows={3} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+             <FormField
+              control={form.control}
+              name="urgency"
+              render={({ field }) => (
+                <FormItem className="space-y-3">
+                  <FormLabel>Avec quelle urgence estimez-vous avoir besoin de parler à quelqu'un ?</FormLabel>
+                  <FormControl>
+                    <RadioGroup
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                      className="flex flex-col space-y-2"
+                    >
+                      {(["Pas urgent", "Bientôt", "Dès que possible"] as const).map((level) => (
+                        <FormItem key={level} className="flex items-center space-x-3 space-y-0">
+                          <FormControl>
+                            <RadioGroupItem value={level} />
+                          </FormControl>
+                          <FormLabel className="font-normal">{level}</FormLabel>
+                        </FormItem>
+                      ))}
+                    </RadioGroup>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
